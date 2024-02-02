@@ -1,0 +1,339 @@
+"""
+Topology class file
+"""
+
+import os
+import json
+from geopy.distance import distance
+
+from .link import Link
+from .host import Host
+import networkx as nx
+import matplotlib.pyplot as plt
+
+
+import imageio
+
+"""
+TODO: ADD MOBILITY MODELS FROM SUMO
+
+in sumo:
+important: --fcd-output.geo to give latitude and longitude
+sumo -c config.sumocfg --fcd-output.geo 1 --fcd-output fcd-output-file.xml
+
+This will probably be added to the envirnoment updating ts to ts
+1. Read the xml
+2. add a create/delete or update location of each car
+"""
+
+
+class Network:
+    """This class represents the network
+
+    Attributes
+    ----------
+    G : nx.Graph
+        NetworkX Graph representing the network
+    id : int
+        Internal ID counter
+
+    Methods
+    -------
+    """
+
+    def __init__(self):
+        """Constructor Method"""
+        self.G = nx.Graph()
+        self.id = 0
+        self.sumo_data = {}
+
+    def load_sumo_data(self, file_path: str):
+        """Initialise network from SUMO output file
+
+        Parameters
+        ----------
+        file_path : str
+            File path to SUMO output file. Must be XML!
+
+        Raises
+        ------
+        FileNotFoundError
+            If file does not exist
+        TypeError
+            If file is not XML
+        """
+
+        # Verify if file exists
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError("File not found")
+        # Verify if file is XML
+        if not file_path.endswith(".xml"):
+            raise TypeError("File must be XML")
+        
+        # Read the xml file
+        from xml.etree import ElementTree
+
+        tree = ElementTree.parse(file_path)
+        root = tree.getroot()
+
+        for timestep in root.findall("timestep"):
+            time = float(timestep.get("time") or 0.0)
+            self.sumo_data[time] = {}
+            for vehicle in timestep.findall("vehicle"):
+                vehicle_id = vehicle.get("id")
+                self.sumo_data[time][vehicle_id] = {}
+                vehicle_x = float(vehicle.get("x") or 0.0)
+                vehicle_y = float(vehicle.get("y") or 0.0)
+                vehicle_angle = float(vehicle.get("angle") or 0.0)
+                vehicle_speed = float(vehicle.get("speed") or 0.0)
+
+                self.sumo_data[time][vehicle_id]["x"]=vehicle_x
+                self.sumo_data[time][vehicle_id]["y"]=vehicle_y
+                self.sumo_data[time][vehicle_id]["angle"]=vehicle_angle
+                self.sumo_data[time][vehicle_id]["speed"]=vehicle_speed
+        
+        # save the data to a file for easy access
+        with open("sumo_data.json", "w") as file:
+            json.dump(self.sumo_data, file)
+
+    def update_sumo_network(self, time: float):
+        """Update the network based on the SUMO data
+
+        Parameters
+        ----------
+        time : float
+            Time to update the network to
+        """
+
+        # Check if the time exists in the sumo data
+        if time not in self.sumo_data:
+            #TODO
+            exit()
+
+        # Update the location of each vehicle
+        for vehicle_id in self.sumo_data[time]:
+            vehicle = self.sumo_data[time][vehicle_id]
+            if vehicle_id not in self.G.nodes:
+                self.add_host(Host(vehicle_id,0,0,0,0,vehicle["y"], longitude=vehicle["x"]))
+            else:
+                self.update_host_location(vehicle_id, vehicle["y"], vehicle["x"])
+        self.plot(show_map=True, t=time)
+
+    def load_file(self, file_path: str):
+        """Initialise network from file
+
+        Parameters
+        ----------
+        file_path : str
+            File path to datacenter file. Must be JSON!
+
+        Raises
+        ------
+        FileNotFoundError
+            If file does not exist
+        TypeError
+            If file is not JSON
+        """
+
+        # Verify if file exists
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError("File not found")
+        # Verify if file is JSON
+        if not file_path.endswith(".json"):
+            raise TypeError("File must be JSON")
+
+        # Load file
+        with open(file_path, "r") as file:
+            topology_dict = json.load(file)
+
+        self.load_dict(topology_dict)
+
+    def load_dict(self, topology_dict: dict):
+        """Initialise from dictionary
+
+        Parameters
+        ----------
+        topology_dict : dict
+            Dictionary containing the network's information.
+
+        Examples
+        --------
+        >>> topology_dict = {
+        ...     "hosts": [
+        ...         {"id": 0, "cpu": 2, "ram": 4, "disk": 50, "power": 20},
+        ...         {"id": 1, "cpu": 4, "ram": 8, "disk": 100, "power": 80},
+        ...         {"id": 2, "cpu": 8, "ram": 16, "disk": 200, "power": 200}
+        ...     ],
+        ...     "links": [
+        ...         {"host_id1": 0, "host_id2": 1, "bandwidth": 50, "delay": 0.05},
+        ...         {"host_id1": 1, "host_id2": 2, "bandwidth": 200, "delay": 0.2}
+        ...     ]
+        ... }
+        >>> network = Network()
+        >>> network.load_dict(topology_dict)
+        >>> network.plot()
+        """
+
+        for host in topology_dict["hosts"]:
+            self.add_host(Host(**host))
+
+        for link in topology_dict["links"]:
+            dist = distance(
+                self.get_host(link["host_id1"]).get_location(),
+                self.get_host(link["host_id2"]).get_location(),
+            ).km
+            self.add_link(Link(**link, distance=dist))
+
+    def add_host(self, host: Host):
+        """Add host to the network
+
+        Parameters
+        ----------
+        host : Host
+            Host to add to the network
+        """
+
+        # print(host)
+
+        self.G.add_node(host.id, host=host)
+
+    def add_link(self, link: Link):
+        """Add link to the network
+
+        Parameters
+        ----------
+        link : Link
+            Link to add to the network
+        """
+
+        # print(link)
+
+        self.G.add_edge(link.host_id1, link.host_id2, link=link)
+
+    def get_host(self, host_id: int) -> Host:
+        """Get host by ID
+
+        Parameters
+        ----------
+        host_id : int
+            ID of the host to get
+
+        Returns
+        -------
+        Host
+            Host with the given ID
+        """
+
+        return self.G.nodes[host_id]["host"]
+
+    def get_host_links(self, host_id: int) -> list[Link]:
+        """Get links of a host
+
+        Parameters
+        ----------
+        host_id : int
+            ID of the host to get the links of
+
+        Returns
+        -------
+        list of Link
+            List of links connected to the host
+        """
+
+        return self.G.edges(host_id)
+
+    def update_host_location(self, host_id: int, latitude: float, longitude: float):
+        """Update the location of a host
+        It also updates the link propagation delays.
+        Note: If the other host does not have a location, it will assume its location is (0, 0)
+
+        Parameters
+        ----------
+        host_id : int
+            ID of the host to update
+        latitude : float
+            Latitude of the host
+        longitude : float
+            Longitude of the host
+        """
+
+        self.get_host(host_id).update_location(latitude, longitude)
+
+        for link_id in self.get_host_links(host_id):
+            link = self.G.edges[link_id]["link"]
+            link.update_distance(
+                distance(
+                    (latitude, longitude),
+                    self.get_host(link.get_other_host_id(host_id)).get_location(),
+                ).km
+            )
+
+
+    def plot(self, show_map=False, t=0.0, plot_labels = False):
+        """Plot the network
+        
+        Parameters
+        ----------
+        show_map : bool, optional
+            Show the map in the background, by default False
+        
+        """
+
+        # Create node positions
+        g = self.G
+        pos={
+            n: [g.nodes[n]["host"].longitude, g.nodes[n]["host"].latitude]
+            for n in g.nodes
+        }
+        #print(pos)
+
+        
+
+        fig, ax = plt.subplots()
+        ax.set_axis_off()
+        if show_map:
+            from contextily import add_basemap
+            import geopandas
+
+            # get latitudes and longitudes from the nodes
+            lons = [pos[node][0] for node in pos]
+            lats = [pos[node][1] for node in pos]
+
+            nodes = geopandas.GeoDataFrame(
+                {"id": list(pos.keys()), "geometry": geopandas.points_from_xy(lons, lats, crs="EPSG:4326")}
+            )
+
+            #print(nodes.crs)
+
+            #print(nodes)
+            nodes.plot(ax=ax, color='red', markersize=10)
+            # Add basemap
+            add_basemap(ax, crs="EPSG:4326")
+        
+        nx.draw_networkx_nodes(g,pos=pos,node_size=10,node_color='red',alpha=.5)
+        nx.draw_networkx_edges(g,pos=pos,edge_color='gray', alpha=.1)
+        if plot_labels:
+            nx.draw_networkx_labels(g,pos=pos,font_size=8,font_color='black')
+
+        # TOREMOVE
+        plt.savefig(f'./img/img_{t}.png', 
+                transparent = False,  
+                facecolor = 'white'
+        )
+
+        plt.close()
+
+    def print_hosts(self):
+        """Print the hosts of the network"""
+        print("Hosts in the network:")
+        for host_id in self.G.nodes:
+            print(self.get_host(host_id))
+
+    def print_links(self):
+        """Print the links of the network"""
+        print("Links in the network:")
+        for host_id1, host_id2 in self.G.edges:
+            print(self.G.edges[host_id1, host_id2]["link"])
+
+    def __str__(self):
+        return str(self.G)
