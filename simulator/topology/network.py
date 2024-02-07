@@ -11,8 +11,9 @@ from .host import Host
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from contextily import add_basemap
+import geopandas
 
-import imageio
 
 """
 TODO: ADD MOBILITY MODELS FROM SUMO
@@ -45,7 +46,13 @@ class Network:
         """Constructor Method"""
         self.G = nx.Graph()
         self.id = 0
+
+        # SUMO
         self.sumo_data = {}
+        self.minlat = 90
+        self.maxlat = -90
+        self.minlon = 180
+        self.maxlon = -180
 
     def load_sumo_data(self, file_path: str):
         """Initialise network from SUMO output file
@@ -63,13 +70,20 @@ class Network:
             If file is not XML
         """
 
+        # Check if sumo_data.json exists
+        if os.path.isfile("sumo_data.json"):
+            print("Found a sumo_data.json file. Loading data from it instead. If you want to reload the data, delete the file.")
+            with open("sumo_data.json", "r") as file:
+                self.sumo_data = {float(ts): value for (ts,value) in json.load(file).items()}
+            return
+
         # Verify if file exists
         if not os.path.isfile(file_path):
             raise FileNotFoundError("File not found")
         # Verify if file is XML
         if not file_path.endswith(".xml"):
             raise TypeError("File must be XML")
-        
+
         # Read the xml file
         from xml.etree import ElementTree
 
@@ -82,22 +96,32 @@ class Network:
             for vehicle in timestep.findall("vehicle"):
                 vehicle_id = vehicle.get("id")
                 self.sumo_data[time][vehicle_id] = {}
-                vehicle_x = float(vehicle.get("x") or 0.0)
-                vehicle_y = float(vehicle.get("y") or 0.0)
+                vehicle_x = float(vehicle.get("x") or 0.0)  # longitude
+                vehicle_y = float(vehicle.get("y") or 0.0)  # latitude
+                # update min and max lat and lon
+                if vehicle_x < self.minlon:
+                    self.minlon = vehicle_x
+                if vehicle_x > self.maxlon:
+                    self.maxlon = vehicle_x
+                if vehicle_y < self.minlat:
+                    self.minlat = vehicle_y
+                if vehicle_y > self.maxlat:
+                    self.maxlat = vehicle_y
+
                 vehicle_angle = float(vehicle.get("angle") or 0.0)
                 vehicle_speed = float(vehicle.get("speed") or 0.0)
 
-                self.sumo_data[time][vehicle_id]["x"]=vehicle_x
-                self.sumo_data[time][vehicle_id]["y"]=vehicle_y
-                self.sumo_data[time][vehicle_id]["angle"]=vehicle_angle
-                self.sumo_data[time][vehicle_id]["speed"]=vehicle_speed
-        
+                self.sumo_data[time][vehicle_id]["x"] = vehicle_x
+                self.sumo_data[time][vehicle_id]["y"] = vehicle_y
+                self.sumo_data[time][vehicle_id]["angle"] = vehicle_angle
+                self.sumo_data[time][vehicle_id]["speed"] = vehicle_speed
+
         # save the data to a file for easy access
         with open("sumo_data.json", "w") as file:
             json.dump(self.sumo_data, file)
 
     def update_sumo_network(self, time: float):
-        """Update the network based on the SUMO data
+        """Update the vehicles' locations in the network to the given time based on the SUMO data
 
         Parameters
         ----------
@@ -107,17 +131,30 @@ class Network:
 
         # Check if the time exists in the sumo data
         if time not in self.sumo_data:
-            #TODO
+            # TODO
+            print("tenho de abandonar")
             exit()
 
         # Update the location of each vehicle
         for vehicle_id in self.sumo_data[time]:
             vehicle = self.sumo_data[time][vehicle_id]
             if vehicle_id not in self.G.nodes:
-                self.add_host(Host(vehicle_id,0,0,0,0,vehicle["y"], longitude=vehicle["x"]))
+                self.add_host(
+                    Host(vehicle_id, 0, 0, 0, 0, vehicle["y"], longitude=vehicle["x"])
+                )
             else:
                 self.update_host_location(vehicle_id, vehicle["y"], vehicle["x"])
-        self.plot(show_map=True, t=time)
+
+        # remove the vehicles that are not in the current time
+        to_remove = []
+        for vehicle_id in self.G.nodes:
+            if vehicle_id not in self.sumo_data[time]:
+                to_remove.append(vehicle_id)
+                
+        for vehicle_id in to_remove:
+            self.G.remove_node(vehicle_id)
+
+        self.plot(show_map=True, t=time, plot_labels=False)
 
     def load_file(self, file_path: str):
         """Initialise network from file
@@ -268,58 +305,56 @@ class Network:
                 ).km
             )
 
-
-    def plot(self, show_map=False, t=0.0, plot_labels = False):
+    def plot(self, show_map=False, t=0.0, plot_labels=False):
         """Plot the network
-        
+
         Parameters
         ----------
         show_map : bool, optional
             Show the map in the background, by default False
-        
+        t : float, optional
+            Time of the plot, by default 0.0
+        plot_labels : bool, optional
+            Plot the labels of the nodes, by default False
+
         """
 
         # Create node positions
         g = self.G
-        pos={
+        pos = {
             n: [g.nodes[n]["host"].longitude, g.nodes[n]["host"].latitude]
             for n in g.nodes
         }
-        #print(pos)
-
-        
+        # print(pos)
 
         fig, ax = plt.subplots()
         ax.set_axis_off()
+
+        nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
+        nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
+
         if show_map:
-            from contextily import add_basemap
-            import geopandas
 
             # get latitudes and longitudes from the nodes
             lons = [pos[node][0] for node in pos]
             lats = [pos[node][1] for node in pos]
 
             nodes = geopandas.GeoDataFrame(
-                {"id": list(pos.keys()), "geometry": geopandas.points_from_xy(lons, lats, crs="EPSG:4326")}
+                {
+                    "id": list(pos.keys()),
+                    "geometry": geopandas.points_from_xy(lons, lats, crs="EPSG:4326"),
+                }
             )
 
-            #print(nodes.crs)
+            # print(nodes.crs)
 
-            #print(nodes)
-            nodes.plot(ax=ax, color='red', markersize=10)
+            # print(nodes)
+            nodes.plot(ax=ax, color="red", markersize=10)
             # Add basemap
             add_basemap(ax, crs="EPSG:4326")
-        
-        nx.draw_networkx_nodes(g,pos=pos,node_size=10,node_color='red',alpha=.5)
-        nx.draw_networkx_edges(g,pos=pos,edge_color='gray', alpha=.1)
-        if plot_labels:
-            nx.draw_networkx_labels(g,pos=pos,font_size=8,font_color='black')
 
         # TOREMOVE
-        plt.savefig(f'./img/img_{t}.png', 
-                transparent = False,  
-                facecolor = 'white'
-        )
+        plt.savefig(f"./img/img_{t}.png", transparent=False, facecolor="white")
 
         plt.close()
 

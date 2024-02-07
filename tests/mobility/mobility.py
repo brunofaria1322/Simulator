@@ -18,6 +18,8 @@ def main():
     imageio.mimsave('./example.gif', # output gif
                 frames,          # array of input frames
                 fps = 5)         # optional: frames per second
+    
+    print("Gif created successfully")
 
 if __name__ == "__main__":
     main()
