@@ -11,7 +11,8 @@ def main():
 
     frames = []
     for i in range(1000):
-        network.update_sumo_network(float(i))
+        if network.update_sumo_network(float(i)) == -1:
+            break
         image = imageio.v2.imread(f'./img/img_{float(i)}.png')
         frames.append(image)
 
@@ -23,3 +24,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

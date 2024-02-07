@@ -75,6 +75,21 @@ class Network:
             print("Found a sumo_data.json file. Loading data from it instead. If you want to reload the data, delete the file.")
             with open("sumo_data.json", "r") as file:
                 self.sumo_data = {float(ts): value for (ts,value) in json.load(file).items()}
+
+            # update min and max lat and lon
+            for ts in self.sumo_data:
+                for vehicle in self.sumo_data[ts]:
+                    vehicle_x = self.sumo_data[ts][vehicle]["x"]
+                    vehicle_y = self.sumo_data[ts][vehicle]["y"]
+                    # update min and max lat and lon
+                    if vehicle_x < self.minlon:
+                        self.minlon = vehicle_x
+                    if vehicle_x > self.maxlon:
+                        self.maxlon = vehicle_x
+                    if vehicle_y < self.minlat:
+                        self.minlat = vehicle_y
+                    if vehicle_y > self.maxlat:
+                        self.maxlat = vehicle_y
             return
 
         # Verify if file exists
@@ -127,13 +142,18 @@ class Network:
         ----------
         time : float
             Time to update the network to
+
+        Returns
+        -------
+        int
+            -1 if the time does not exist in the SUMO data
+
         """
 
         # Check if the time exists in the sumo data
         if time not in self.sumo_data:
-            # TODO
-            print("tenho de abandonar")
-            exit()
+            print(f"Time {time} does not exist in the SUMO data! Exiting...")
+            return(-1)
 
         # Update the location of each vehicle
         for vehicle_id in self.sumo_data[time]:
@@ -329,9 +349,11 @@ class Network:
 
         fig, ax = plt.subplots()
         ax.set_axis_off()
+        
 
-        nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
-        nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
+        # set limits
+        ax.set_xlim(self.minlon, self.maxlon)
+        ax.set_ylim(self.minlat, self.maxlat)
 
         if show_map:
 
@@ -346,17 +368,22 @@ class Network:
                 }
             )
 
-            # print(nodes.crs)
-
             # print(nodes)
             nodes.plot(ax=ax, color="red", markersize=10)
-            # Add basemap
-            add_basemap(ax, crs="EPSG:4326")
 
+            # Add basemap
+            add_basemap(ax, crs="EPSG:4326", attribution_size=1)
+
+        nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
+        nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
+
+        
+        plt.tight_layout()
         # TOREMOVE
         plt.savefig(f"./img/img_{t}.png", transparent=False, facecolor="white")
-
+        plt.show()
         plt.close()
+
 
     def print_hosts(self):
         """Print the hosts of the network"""
