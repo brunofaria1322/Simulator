@@ -153,4 +153,6 @@ cython_debug/
 
 tests/mobility/sumo/
 img/
+.vscode/
+
 
