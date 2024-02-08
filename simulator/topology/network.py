@@ -347,7 +347,7 @@ class Network:
         }
         # print(pos)
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 10))
         ax.set_axis_off()
         
 
@@ -372,7 +372,7 @@ class Network:
             nodes.plot(ax=ax, color="red", markersize=10)
 
             # Add basemap
-            add_basemap(ax, crs="EPSG:4326", attribution_size=1)
+            add_basemap(ax, crs="EPSG:4326", attribution_size=5)
 
         nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
         nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
@@ -380,8 +380,7 @@ class Network:
         
         plt.tight_layout()
         # TOREMOVE
-        plt.savefig(f"./img/img_{t}.png", transparent=False, facecolor="white")
-        plt.show()
+        plt.savefig(f"./img/img_{t}.png", bbox_inches='tight')
         plt.close()
 
 
