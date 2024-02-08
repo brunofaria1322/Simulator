@@ -151,7 +151,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-tests/mobility/sumo/BeST/
-tests/mobility/sumo/MannheimSumoModel/
-tests/mobility/sumo/MoST/
+tests/mobility/sumo/
 img/
+
