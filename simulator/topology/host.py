@@ -46,6 +46,7 @@ class Host:
         power: int,
         latitude: float = 0,
         longitude: float = 0,
+        altitude: float = 0,
     ):
         """
         Parameters
@@ -64,6 +65,8 @@ class Host:
             Latitude of the host.
         longitude : float, optional
             Longitude of the host.
+        altitude : float, optional
+            Altitude of the host.
         """
 
         self.id = id
@@ -74,10 +77,11 @@ class Host:
         # Optional attributes
         self.latitude = latitude
         self.longitude = longitude
+        self.altitude = altitude
         # Fun fact: The default values of latitude and longitude (0, 0)
         # is usually called the Null Island :)
 
-    def update_location(self, latitude: float, longitude: float):
+    def update_location(self, latitude: float, longitude: float, altitude: float = 0):
         """Update the location of the host.
 
         Parameters
@@ -86,19 +90,22 @@ class Host:
             Latitude of the host.
         longitude : float
             Longitude of the host.
+        altitude : float, optional
+            Altitude of the host.
         """
         self.latitude = latitude
         self.longitude = longitude
+        self.altitude = altitude
 
-    def get_location(self) -> tuple[float, float]:
+    def get_location(self) -> tuple[float, float, float]:
         """Get the location of the host.
 
         Returns
         -------
         tuple of float
-            Tuple containing the latitude and longitude of the host.
+            Tuple containing the latitude, longitude, and altitude of the host.
         """
-        return (self.latitude, self.longitude)
+        return (self.latitude, self.longitude, self.altitude)
 
     def allocate_task(self, task):
         # Check if the host has enough resources to allocate the task
@@ -128,6 +135,6 @@ class Host:
             f"Disk = {self.disk} GB, Power = {self.power} W"
         )
         if self.latitude and self.longitude:
-            output += f", Location = ({self.latitude}, {self.longitude})"
+            output += f", Location = ({self.latitude}, {self.longitude}, {self.altitude})"
 
         return output

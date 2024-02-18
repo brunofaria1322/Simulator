@@ -2,8 +2,10 @@
 Topology class file
 """
 
+import math
 import os
 import json
+import requests
 from geopy.distance import distance
 
 from .link import Link
@@ -72,9 +74,13 @@ class Network:
 
         # Check if sumo_data.json exists
         if os.path.isfile("sumo_data.json"):
-            print("Found a sumo_data.json file. Loading data from it instead. If you want to reload the data, delete the file.")
+            print(
+                "Found a sumo_data.json file. Loading data from it instead. If you want to reload the data, delete the file."
+            )
             with open("sumo_data.json", "r") as file:
-                self.sumo_data = {float(ts): value for (ts,value) in json.load(file).items()}
+                self.sumo_data = {
+                    float(ts): value for (ts, value) in json.load(file).items()
+                }
 
             # update min and max lat and lon
             for ts in self.sumo_data:
@@ -153,24 +159,22 @@ class Network:
         # Check if the time exists in the sumo data
         if time not in self.sumo_data:
             print(f"Time {time} does not exist in the SUMO data! Exiting...")
-            return(-1)
+            return -1
 
         # Update the location of each vehicle
         for vehicle_id in self.sumo_data[time]:
             vehicle = self.sumo_data[time][vehicle_id]
             if vehicle_id not in self.G.nodes:
-                self.add_host(
-                    Host(vehicle_id, 0, 0, 0, 0, vehicle["y"], longitude=vehicle["x"])
-                )
-            else:
-                self.update_host_location(vehicle_id, vehicle["y"], vehicle["x"])
+                self.add_host(Host(vehicle_id, 0, 0, 0, 0))
+
+            self.update_host_location(vehicle_id, vehicle["y"], vehicle["x"])
 
         # remove the vehicles that are not in the current time
         to_remove = []
         for vehicle_id in self.G.nodes:
             if vehicle_id not in self.sumo_data[time]:
                 to_remove.append(vehicle_id)
-                
+
         for vehicle_id in to_remove:
             self.G.remove_node(vehicle_id)
 
@@ -299,10 +303,15 @@ class Network:
 
         return self.G.edges(host_id)
 
-    def update_host_location(self, host_id: int, latitude: float, longitude: float):
+    def update_host_location(
+        self,
+        host_id: int,
+        latitude: float,
+        longitude: float,
+        altitude: float = -1,
+    ):
         """Update the location of a host
         It also updates the link propagation delays.
-        Note: If the other host does not have a location, it will assume its location is (0, 0)
 
         Parameters
         ----------
@@ -312,18 +321,27 @@ class Network:
             Latitude of the host
         longitude : float
             Longitude of the host
+        altitude : float, optional
+            Altitude of the host. Default is -1.
+            If -1, the altitude will be fetched automatically from the coordinates representing the ground level.
         """
 
-        self.get_host(host_id).update_location(latitude, longitude)
+        if altitude == -1:
+            # fetch the altitude from the coordinates
+            query = f"https://api.open-elevation.com/api/v1/lookup?locations={latitude},{longitude}"
+            response = requests.get(query).json()
+            altitude = response["results"][0]["elevation"]
+
+        self.get_host(host_id).update_location(latitude, longitude, altitude or 0)
 
         for link_id in self.get_host_links(host_id):
             link = self.G.edges[link_id]["link"]
-            link.update_distance(
-                distance(
-                    (latitude, longitude),
-                    self.get_host(link.get_other_host_id(host_id)).get_location(),
-                ).km
-            )
+            flat_distance = distance(  # geopy only accepts lat and lon, no altitude. https://geopy.readthedocs.io/en/stable/#module-geopy.distance
+                (latitude, longitude),
+                self.get_host(link.get_other_host_id(host_id)).get_location()[:2],
+            ).km
+            euclidian_distance = math.sqrt(flat_distance**2 + (altitude - self.get_host(link.get_other_host_id(host_id)).get_location()[2])**2)
+            link.update_distance(euclidian_distance)
 
     def plot(self, show_map=False, t=0.0, plot_labels=False):
         """Plot the network
@@ -349,14 +367,12 @@ class Network:
 
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.set_axis_off()
-        
 
         # set limits
         ax.set_xlim(self.minlon, self.maxlon)
         ax.set_ylim(self.minlat, self.maxlat)
 
         if show_map:
-
             # get latitudes and longitudes from the nodes
             lons = [pos[node][0] for node in pos]
             lats = [pos[node][1] for node in pos]
@@ -377,12 +393,10 @@ class Network:
         nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
         nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
 
-        
         plt.tight_layout()
         # TOREMOVE
-        plt.savefig(f"./img/img_{t}.png", bbox_inches='tight')
+        plt.savefig(f"./img/img_{t}.png", bbox_inches="tight")
         plt.close()
-
 
     def print_hosts(self):
         """Print the hosts of the network"""
