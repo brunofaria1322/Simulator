@@ -1,21 +1,21 @@
-simulator.network package
-=========================
+# simulator.network package
 
-Submodules
-----------
+## Submodules
 
-simulator.network.link module
------------------------------
+## simulator.network.link module
 
+```{eval-rst}
 .. automodule:: simulator.network.link
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: simulator.network
    :members:
    :undoc-members:
    :show-inheritance:
+```

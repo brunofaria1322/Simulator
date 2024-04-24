@@ -1,29 +1,30 @@
-simulator.workload package
-==========================
+# simulator.workload package
 
-Submodules
-----------
+## Submodules
 
-simulator.workload.task module
-------------------------------
+## simulator.workload.task module
 
+```{eval-rst}
 .. automodule:: simulator.workload.task
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-simulator.workload.workload\_generator module
----------------------------------------------
+## simulator.workload.workload_generator module
 
+```{eval-rst}
 .. automodule:: simulator.workload.workload_generator
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: simulator.workload
    :members:
    :undoc-members:
    :show-inheritance:
+```

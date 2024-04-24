@@ -9,6 +9,13 @@ sphinx (version 7.3.7)
 - make html
     - (on windows) .\make.bat html
 
+Myst
+- pip install rst-to-myst[sphinx]
+- rst2myst convert docs\**\*.rst
+- delete all .rst files
+- pip install myst-parser
+- do the make html again
+
 ```bash
 root
 ├── docs

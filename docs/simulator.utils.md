@@ -1,10 +1,10 @@
-simulator.utils package
-=======================
+# simulator.utils package
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: simulator.utils
    :members:
    :undoc-members:
    :show-inheritance:
+```
