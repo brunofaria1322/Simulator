@@ -1,5 +1,14 @@
 # Simulator
 
+Pyhton version: 3.12.0
+
+sphinx (version 7.3.7)
+- pip install sphinx
+- sphinx-quickstart docs
+- cd docs
+- make html
+    - (on windows) .\make.bat html
+
 ```bash
 root
 ├── docs

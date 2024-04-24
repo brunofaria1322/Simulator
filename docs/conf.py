@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../'))
 project = 'Simulator'
 copyright = '2023, Bruno Faria'
 author = 'Bruno Faria'
-release = '0.0.01'
+release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -36,5 +36,6 @@ master_doc = 'index'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'pydata_sphinx_theme'
+html_theme = 'alabaster'
+#html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']

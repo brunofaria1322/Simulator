@@ -1,0 +1,63 @@
+# https://github.com/pypa/sampleproject
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+
+name = "simulator"
+version = "0.0.1"
+description = "Simulator for bla bla bla decription."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE.txt" }
+keywords = ["c2t", "c2e", "simulator", "ai", "ml"]
+authors = [{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }]
+maintainers = [{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }]
+# For a list of valid classifiers, see https://pypi.org/classifiers/
+classifiers = [
+	# How mature is this project? Common values are
+	"Development Status :: 1 - Planning",
+
+	# Indicate who your project is intended for
+	"Intended Audience :: Science/Research",
+	"Topic :: Software Development :: Libraries :: Python Modules",
+
+	# Pick your license as you wish
+	"License :: OSI Approved :: GNU Affero General Public License v3",
+
+	# Specify the Python versions you support here. 
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3 :: Only",
+
+	# Operating systems
+	"Operating System :: OS Independent",
+]
+
+# This field lists other packages that your project depends on to run.
+dependencies = ["networkx", "matplotlib", "geopy"]
+
+
+# List URLs that are relevant to your project
+#
+# This field corresponds to the "Project-URL" and "Home-Page" metadata fields:
+# https://packaging.python.org/specifications/core-metadata/#project-url-multiple-use
+# https://packaging.python.org/specifications/core-metadata/#home-page-optional
+#
+# Examples listed include a pattern for specifying where the package tracks
+# issues, where the source is hosted, where to say thanks to the package
+# maintainers, and where to support the project financially. The key is
+# what's used to render the link text on PyPI.
+[project.urls]
+"Homepage" = "https://github.com/brunofaria1322/Simulator"
+"Documentation" = "https://brunofaria1322.github.io/Simulator/"
+"Bug Reports" = "https://github.com/brunofaria1322/Simulator/issues"
+#"Funding" = "https://donate.pypi.org"
+#"Say Thanks!" = "http://saythanks.io/to/example"
+"Source" = "https://github.com/brunofaria1322/Simulator/"
+
+[project.optional-dependencies]
+doc = ["sphinx~=7.3.7"]
