@@ -135,6 +135,8 @@ class Host:
             f"Disk = {self.disk} GB, Power = {self.power} W"
         )
         if self.latitude and self.longitude:
-            output += f", Location = ({self.latitude}, {self.longitude}, {self.altitude})"
+            output += (
+                f", Location = ({self.latitude}, {self.longitude}, {self.altitude})"
+            )
 
         return output

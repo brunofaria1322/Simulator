@@ -3,18 +3,29 @@
 Pyhton version: 3.12.0
 
 sphinx (version 7.3.7)
+
 - pip install sphinx
 - sphinx-quickstart docs
 - cd docs
 - make html
-    - (on windows) .\make.bat html
+  - (on windows) .\make.bat html
+
+Autobuild
+
+- pip install sphinx-autobuild
+- sphinx-autobuild docs\source\ docs\build\html
 
 Myst
+
 - pip install rst-to-myst[sphinx]
-- rst2myst convert docs\**\*.rst
+- rst2myst convert docs\*\*\*.rst
 - delete all .rst files
+- add myst_parser to extensions of conf.py
 - pip install myst-parser
 - do the make html again
+
+Future:
+    - deploy to readthedocs
 
 ```bash
 root
