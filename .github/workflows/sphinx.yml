@@ -34,7 +34,7 @@ jobs:
           pip install sphinx myst-parser furo nbsphinx ghp-import
 
       - name: Build docs
-        ueses: docker://pandoc/core:2.9
+        uses: docker://pandoc/core:2.9
         run: |
           cd docs
           make html
