@@ -1,44 +1,46 @@
 # https://github.com/pypa/sampleproject
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
-
-name = "simulator"
-version = "0.0.1"
-description = "Simulator for bla bla bla decription."
+name = "simulator" #TODO: Change this to the name of the project
+dynamic = ["version"]
+authors = [
+	{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }
+]
+maintainers = [
+	{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }
+]
+description = "Simulator for bla bla bla decription." #TODO: Change this to a short description of the project
+long-description = "README.md"
 readme = "README.md"
-requires-python = ">=3.12"
-license = { file = "LICENSE.txt" }
-keywords = ["c2t", "c2e", "simulator", "ai", "ml"]
-authors = [{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }]
-maintainers = [{ name = "Bruno Faria", email = "brunofaria@dei.uc.pt" }]
-# For a list of valid classifiers, see https://pypi.org/classifiers/
-classifiers = [
+requires-python = ">=3.12" #TODO: Change this to the minimum version of Python that the project supports
+license = { file = "LICENSE" }
+keywords = ["c2t", "c2e", "simulator", "ai", "ml"]	#TODO: Change this to the keywords of the project
+classifiers = [ # For a list of valid classifiers, see https://pypi.org/classifiers/
 	# How mature is this project? Common values are
-	"Development Status :: 1 - Planning",
+	"Development Status :: 1 - Planning", #TODO: Change this to the development status of the project
 
 	# Indicate who your project is intended for
 	"Intended Audience :: Science/Research",
 	"Topic :: Software Development :: Libraries :: Python Modules",
 
 	# Pick your license as you wish
-	"License :: OSI Approved :: GNU Affero General Public License v3",
+	"License :: OSI Approved :: GNU Affero General Public License v3", #TODO: Change this to the license of the project
 
 	# Specify the Python versions you support here. 
 	"Programming Language :: Python :: 3",
-	"Programming Language :: Python :: 3.12",
+	"Programming Language :: Python :: 3.12",      #TODO: Change this to the versions of Python that the project supports
 	"Programming Language :: Python :: 3 :: Only",
 
 	# Operating systems
 	"Operating System :: OS Independent",
 ]
-
 # This field lists other packages that your project depends on to run.
-dependencies = ["networkx", "matplotlib", "geopy"]
+dependencies = ["networkx", "matplotlib", "geopy"]	#TODO: Change this to the dependencies of the project
 
 
 # List URLs that are relevant to your project

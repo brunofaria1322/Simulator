@@ -1,5 +1,24 @@
 # Simulator
 
+Check [GitHub-flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write this file.
+
+---
+build:
+- `py -m build`
+
+test build:
+- `twine check dist/*`
+
+upload to test:
+- `twine upload -r testpypi dist/*`
+
+install from test:
+- `pip install -i https://test.pypi.org/simple/ simulator`
+
+upload to pypi:
+- `twine upload dist/*`
+---
+
 Pyhton version: 3.12.0
 
 sphinx (version 7.3.7)
@@ -24,37 +43,8 @@ Myst
 - pip install myst-parser
 - do the make html again
 
-Future:
-    - deploy to readthedocs
-
-```bash
-root
-├── docs
-│   └── ...
-├── simulator
-│   ├── datacenter
-│   │   ├── __init__.py
-│   │   ├── cpu.py
-│   │   ├── datacenter.py
-│   │   ├── disk.py
-│   │   ├── host.py
-│   │   ├── power.py
-│   │   └── ram.py
-│   ├── network
-│   │   ├── __init__.py
-│   │   └── link.py
-│   ├── utils
-│   │   ├── __init__.py
-│   │   └── utils.py
-│   ├── works
-│   │   ├── __init__.py
-│   │   ├── task.py
-│   │   └── task_generator.py
-│   ├── __init__.py
-│   └── simulator.py
-├── LICENSE
-├── main.py
-├── README.md
-├── requirements.txt
-└── setup.py
-```
+Future: 
+- actions: 
+  - [ ] deploy to pypi
+  - [ ] deploy to readthedocs
+  - [x] deploy to github pages

@@ -1,7 +1,7 @@
 """ Mobility Test"""
 
 import imageio
-from simulator.topology import Network
+from src.topology import Network
 
 """
 cd ./tests/mobility/sumo
