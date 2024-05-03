@@ -36,7 +36,6 @@ jobs:
           sudo apt-get install -y pandoc
 
       - name: Build docs
-        uses: docker://pandoc/core:2.9
         run: |
           cd docs
           make html
