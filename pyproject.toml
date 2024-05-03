@@ -62,4 +62,4 @@ dependencies = ["networkx", "matplotlib", "geopy"]	#TODO: Change this to the dep
 "Source" = "https://github.com/brunofaria1322/Simulator/"
 
 [project.optional-dependencies]
-doc = ["sphinx~=7.3.7", "myst-parser", "furo", "nbsphinx"]
+doc = ["sphinx", "myst-parser", "furo", "nbsphinx"]
