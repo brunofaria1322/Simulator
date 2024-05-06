@@ -2,7 +2,7 @@
 Main file
 """
 
-from src.topology import Network
+from simulator.topology import Network
 
 
 def main():

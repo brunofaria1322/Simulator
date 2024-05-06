@@ -1,22 +1,37 @@
 # Simulator
 
+<h1 align="center">Simulator</h1>
+<div align="center">
+  <a href="https://github.com/brunofaria1322/Simulator/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-GPL%203.0-red.svg" alt="License">
+  </a>
+  <a>
+    <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12">
+  </a>
+</div>
+
 Check [GitHub-flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write this file.
 
 ---
+
+Since we are using a src structure, we need to install the package in editable mode to be able to import it.
+
+- `pip install -e .`
+
+---
+
 build:
+
 - `py -m build`
 
 test build:
+
 - `twine check dist/*`
 
-upload to test:
-- `twine upload -r testpypi dist/*`
-
-install from test:
-- `pip install -i https://test.pypi.org/simple/ simulator`
-
 upload to pypi:
+
 - `twine upload dist/*`
+
 ---
 
 Pyhton version: 3.12.0
@@ -43,8 +58,9 @@ Myst
 - pip install myst-parser
 - do the make html again
 
-Future: 
-- actions: 
+Future:
+
+- actions:
   - [ ] deploy to pypi
   - [ ] deploy to readthedocs
   - [x] deploy to github pages

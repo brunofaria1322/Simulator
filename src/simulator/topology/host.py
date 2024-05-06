@@ -81,6 +81,16 @@ class Host:
         # Fun fact: The default values of latitude and longitude (0, 0)
         # is usually called the Null Island :)
 
+    def get_location(self) -> tuple[float, float, float]:
+        """Get the location of the host.
+
+        Returns
+        -------
+        tuple of float
+            Tuple containing the latitude, longitude, and altitude of the host.
+        """
+        return (self.latitude, self.longitude, self.altitude)
+
     def update_location(self, latitude: float, longitude: float, altitude: float = 0):
         """Update the location of the host.
 
@@ -97,17 +107,8 @@ class Host:
         self.longitude = longitude
         self.altitude = altitude
 
-    def get_location(self) -> tuple[float, float, float]:
-        """Get the location of the host.
-
-        Returns
-        -------
-        tuple of float
-            Tuple containing the latitude, longitude, and altitude of the host.
-        """
-        return (self.latitude, self.longitude, self.altitude)
-
     def allocate_task(self, task):
+        # TODO: Implement this method
         # Check if the host has enough resources to allocate the task
         if (
             self.cpu >= task.cpu_requirement
@@ -124,6 +125,7 @@ class Host:
             return False
 
     def release_task(self, task):
+        # TODO: Implement this method
         # Release the resources associated with the task
         self.cpu += task.cpu_requirement
         self.ram += task.ram_requirement

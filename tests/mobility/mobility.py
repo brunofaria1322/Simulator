@@ -1,7 +1,8 @@
 """ Mobility Test"""
 
+import os
 import imageio
-from src.topology import Network
+from simulator.topology import Network
 
 """
 cd ./tests/mobility/sumo
@@ -21,7 +22,7 @@ def main():
     network.load_sumo_data(sumo_output_file)
 
     frames = []
-    for i in range(1000):
+    for i in range(100):
         if network.update_sumo_network(float(i)) == -1:
             break
         image = imageio.v2.imread(f"./img/img_{float(i)}.png")

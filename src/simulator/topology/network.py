@@ -286,23 +286,7 @@ class Network:
         """
 
         return self.G.nodes[host_id]["host"]
-
-    def get_host_links(self, host_id: int) -> list[Link]:
-        """Get links of a host
-
-        Parameters
-        ----------
-        host_id : int
-            ID of the host to get the links of
-
-        Returns
-        -------
-        list of Link
-            List of links connected to the host
-        """
-
-        return self.G.edges(host_id)
-
+    
     def update_host_location(
         self,
         host_id: int,
@@ -334,13 +318,15 @@ class Network:
 
         self.get_host(host_id).update_location(latitude, longitude, altitude or 0)
 
-        for link_id in self.get_host_links(host_id):
-            link = self.G.edges[link_id]["link"]
+        for adjunted_host in self.G[host_id]:
+            link = self.G[host_id][adjunted_host]["link"]
+            other_host_location = self.get_host(adjunted_host).get_location()
+            
             flat_distance = distance(  # geopy only accepts lat and lon, no altitude. https://geopy.readthedocs.io/en/stable/#module-geopy.distance
                 (latitude, longitude),
-                self.get_host(link.get_other_host_id(host_id)).get_location()[:2],
+                other_host_location[:2],
             ).km
-            euclidian_distance = math.sqrt(flat_distance**2 + (altitude - self.get_host(link.get_other_host_id(host_id)).get_location()[2])**2)
+            euclidian_distance = math.sqrt(flat_distance**2 + (altitude - other_host_location[2])**2)
             link.update_distance(euclidian_distance)
 
     def plot(self, show_map=False, t=0.0, plot_labels=False):
@@ -394,6 +380,7 @@ class Network:
         nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
 
         plt.tight_layout()
+        
         # TOREMOVE
         plt.savefig(f"./img/img_{t}.png", bbox_inches="tight")
         plt.close()
