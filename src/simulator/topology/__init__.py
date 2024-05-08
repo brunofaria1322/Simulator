@@ -1,4 +1,4 @@
-from .resources import CPU, RAM, Disk
+from .resources import CPU, RAM, Disk, Power
 from .host import Host
 from .link import Link
 from .network import Network

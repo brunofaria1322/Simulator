@@ -1,6 +1,5 @@
 """ Mobility Test"""
 
-import os
 import imageio
 from simulator.topology import Network
 

@@ -63,6 +63,7 @@ dependencies = [
 "Homepage" = "https://github.com/brunofaria1322/Simulator"
 "Documentation" = "https://brunofaria1322.github.io/Simulator/"
 "Bug Reports" = "https://github.com/brunofaria1322/Simulator/issues"
+#"Changelog" = "https://github.com/bruno1322/Simulator/blob/main/CHANGELOG.md"
 #"Funding" = "https://donate.pypi.org"
 #"Say Thanks!" = "http://saythanks.io/to/example"
 "Source" = "https://github.com/brunofaria1322/Simulator/"
@@ -73,9 +74,9 @@ test = ["pytest", "pytest-cov"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "README.md"]
-addopts = '--doctest-modules --doctest-glob="*.md"'
+addopts = '--doctest-modules --doctest-glob="*.md" --cov=simulator --cov-report html'
 doctest_optionflags = [
-    "ELLIPSIS",
-    "NORMALIZE_WHITESPACE",
-    "IGNORE_EXCEPTION_DETAIL"
+	"ELLIPSIS",
+	"NORMALIZE_WHITESPACE",
+	"IGNORE_EXCEPTION_DETAIL",
 ]

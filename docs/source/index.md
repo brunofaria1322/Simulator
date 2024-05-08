@@ -5,11 +5,6 @@
 
 # Simulator!
 
-```{toctree}
-:caption: 'Contents:'
-:maxdepth: 2
-```
-
 ```{warning}
 This library is under development and may have bugs.
 ```
@@ -19,7 +14,9 @@ test note
 ```
 
 For more information, see the {doc}`usage` page.
-Read installation instructions in the {ref}`installation` page.
+Read installation instructions on the {ref}`installation` page.
+For information on mobility, see the {doc}`mobility` page.
+
 
 ```{seealso}
 test seealso
@@ -30,5 +27,6 @@ test seealso
 :maxdepth: 2
 
 usage
+mobility
 notebooks/tutorial
 ```

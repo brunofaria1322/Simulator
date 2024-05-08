@@ -1,14 +1,26 @@
-# Simulator
+[comment]: # "TODO: Change the links below! Change everything that has simulator to the decided name"
 
-<h1 align="center">Simulator</h1>
-<div align="center">
-  <a href="https://github.com/brunofaria1322/Simulator/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-GPL%203.0-red.svg" alt="License">
-  </a>
-  <a>
-    <img src="https://img.shields.io/badge/python-3.12-blue.svg" alt="Python 3.12">
-  </a>
-</div>
+# Overview
+
+[![Documentation Status](https://readthedocs.org/projects/simulator/badge/?version=latest)](https://simulator.readthedocs.io/en/latest/?badge=latest)
+
+[![GitHub license](https://img.shields.io/github/license/brunofaria1322/Simulator)](https://github.com/brunofaria1322/Simulator/blob/main/LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+[![PyPI version](https://badge.fury.io/py/Simulator.svg)](https://badge.fury.io/py/Simulator)
+
+brief description about the simulator ... bla bla bla
+
+## Installation
+
+Install the package using pip:
+
+```bash
+pip install <name_not_defined_yet>
+```
+
+## Documentation
+
+The documentation is available at [github pages](https://brunofaria1322.github.io/Simulator) / Futurely at [readthedocs](https://readthedocs.io/en/latest/).
 
 Check [GitHub-flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write this file.
 

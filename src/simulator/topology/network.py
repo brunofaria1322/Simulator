@@ -51,18 +51,23 @@ class Network:
 
         # SUMO
         self.sumo_data = {}
+        # for plotting
         self.minlat = 90
         self.maxlat = -90
         self.minlon = 180
         self.maxlon = -180
 
-    def load_sumo_data(self, file_path: str):
+    def load_sumo_data(self, file_path: str, force_read_xml=False):
         """Initialise network from SUMO output file
+
+        If the sumo_data.json file exists, it will load the data from it instead of the XML file, for faster access.
 
         Parameters
         ----------
         file_path : str
             File path to SUMO output file. Must be XML!
+        force_read_xml : bool, optional
+            Force reading the XML file, by default False
 
         Raises
         ------
@@ -73,9 +78,9 @@ class Network:
         """
 
         # Check if sumo_data.json exists
-        if os.path.isfile("sumo_data.json"):
+        if not force_read_xml and os.path.isfile("sumo_data.json"):
             print(
-                "Found a sumo_data.json file. Loading data from it instead. If you want to reload the data, delete the file."
+                "Found a sumo_data.json file. Loading data from it instead. If you want to reload the sumo data, delete sumo_data.json file."
             )
             with open("sumo_data.json", "r") as file:
                 self.sumo_data = {
@@ -98,12 +103,14 @@ class Network:
                         self.maxlat = vehicle_y
             return
 
-        # Verify if file exists
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError("File not found")
+        
         # Verify if file is XML
         if not file_path.endswith(".xml"):
             raise TypeError("File must be XML")
+        
+        # Verify if file exists
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError("File not found")
 
         # Read the xml file
         from xml.etree import ElementTree
@@ -286,7 +293,7 @@ class Network:
         """
 
         return self.G.nodes[host_id]["host"]
-    
+
     def update_host_location(
         self,
         host_id: int,
@@ -321,12 +328,14 @@ class Network:
         for adjunted_host in self.G[host_id]:
             link = self.G[host_id][adjunted_host]["link"]
             other_host_location = self.get_host(adjunted_host).get_location()
-            
+
             flat_distance = distance(  # geopy only accepts lat and lon, no altitude. https://geopy.readthedocs.io/en/stable/#module-geopy.distance
                 (latitude, longitude),
                 other_host_location[:2],
             ).km
-            euclidian_distance = math.sqrt(flat_distance**2 + (altitude - other_host_location[2])**2)
+            euclidian_distance = math.sqrt(
+                flat_distance**2 + (altitude - other_host_location[2]) ** 2
+            )
             link.update_distance(euclidian_distance)
 
     def plot(self, show_map=False, t=0.0, plot_labels=False):
@@ -380,7 +389,7 @@ class Network:
         nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
 
         plt.tight_layout()
-        
+
         # TOREMOVE
         plt.savefig(f"./img/img_{t}.png", bbox_inches="tight")
         plt.close()
