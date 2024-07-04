@@ -5,6 +5,7 @@ Topology class file
 import math
 import os
 import json
+import random
 import requests
 from geopy.distance import distance
 
@@ -338,6 +339,62 @@ class Network:
             )
             link.update_distance(euclidian_distance)
 
+    def network_generation(self, n, m, cloud_nodes_percentage=0.01, edge_nodes_percentage=0.25):
+        """
+        Generates a network topology using the Barabasi-Albert model.
+
+        Parameters
+        ----------
+            n : int
+                The number of nodes in the network.
+            m : int
+                The number of edges to attach from a new node to existing nodes.
+            cloud_nodes_percentage : float (optional)
+                The percentage of nodes to be designated as cloud nodes. Defaults to 0.01.
+            edge_nodes_percentage : float (optional)
+                The percentage of nodes to be designated as edge nodes. Defaults to 0.25.
+        """
+        self.G = nx.barabasi_albert_graph(n, m)
+
+        # add hosts to the network
+        for node in self.G.nodes:
+            # get random values for latitudes and longitudes
+            latitude = 40.20784298173971 + (2 * (0.5 - random.random()))
+            longitude = -8.42363234639827 +  (2 * (0.5 - random.random()))
+            # TODO: add resources to the hosts
+            self.G.nodes[node]["host"] = Host(id=node, cpu=0, ram=0, disk=0, power=0, latitude=latitude, longitude=longitude)
+
+        # add links to the network
+        for edge in self.G.edges:
+            host_id1, host_id2 = edge
+            dist = distance(
+                self.get_host(host_id1).get_location(),
+                self.get_host(host_id2).get_location(),
+            ).km
+            self.G.edges[edge]["link"] = Link(distance=dist, bandwidth=0)
+
+        # calculate the centrality for each node
+        unordered_centrality_values = nx.betweenness_centrality(self.G)
+        ordered_centrality_values = sorted(
+            unordered_centrality_values.items(), key=lambda x: x[1], reverse=True
+        )
+
+        # update the hosts with the highest centrality as cloud nodes
+        cloud_nodes = max(1, int(n * cloud_nodes_percentage))
+        for i in range(cloud_nodes):
+            latitude = 38.20784298173971 + (2 * (0.5 - random.random()))
+            longitude = -5.42363234639827 +  (2 * (0.5 - random.random()))
+            self.G.nodes[ordered_centrality_values[i][0]]["host"] = Host(
+                id=ordered_centrality_values[i][0], cpu=0, ram=0, disk=0, power=0, latitude=latitude, longitude=longitude
+            )
+
+        # update the hosts with the lowest centrality as edge nodes
+        edge_nodes = int(n * edge_nodes_percentage)
+        for i in range(cloud_nodes + (n - edge_nodes), n):
+            # TODO: do something with the edge nodes
+            pass
+
+
     def plot(self, show_map=False, t=0.0, plot_labels=False):
         """Plot the network
 
@@ -364,8 +421,8 @@ class Network:
         ax.set_axis_off()
 
         # set limits
-        ax.set_xlim(self.minlon, self.maxlon)
-        ax.set_ylim(self.minlat, self.maxlat)
+        # ax.set_xlim(self.minlon, self.maxlon)
+        # ax.set_ylim(self.minlat, self.maxlat)
 
         if show_map:
             # get latitudes and longitudes from the nodes
@@ -391,7 +448,8 @@ class Network:
         plt.tight_layout()
 
         # TOREMOVE
-        plt.savefig(f"./img/img_{t}.png", bbox_inches="tight")
+        plt.show()
+        # plt.savefig(f"./img/img_{t}.png", bbox_inches="tight")
         plt.close()
 
     def print_hosts(self):

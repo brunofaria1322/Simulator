@@ -81,7 +81,7 @@ class Host:
         # Fun fact: The default values of latitude and longitude (0, 0)
         # is usually called the Null Island :)
 
-    def get_location(self) -> tuple[float, float, float]:
+    def get_location(self) -> 'tuple[float, float, float]':
         """Get the location of the host.
 
         Returns

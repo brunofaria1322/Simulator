@@ -44,17 +44,18 @@ def main():
     }
 
     network = Network()
-    network.load_dict(topology_dict)
+    # network.load_dict(topology_dict)
+    network.network_generation(50, 10)
 
     network.print_hosts()
-    network.print_links()
+    # network.print_links()
     network.plot()
 
-    network.update_host_location(0, 40.20784298173971, -8.42363234639827)  # CHUC -> DQ
+    # network.update_host_location(0, 40.20784298173971, -8.42363234639827)  # CHUC -> DQ
 
-    network.print_hosts()
-    network.print_links()
-    network.plot()
+    # network.print_hosts()
+    # network.print_links()
+    # network.plot()
 
 
 if __name__ == "__main__":
