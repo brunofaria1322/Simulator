@@ -47,13 +47,13 @@ def main():
     timeExe = time.time()
     network = Network()
     # network.load_dict(topology_dict)
-    node_list = network.network_generation_dbscan(200, 8)
+    network.network_generation_dbscan(200, 8)
 
     print("Time to execute: ", time.time() - timeExe)
 
     # network.print_hosts()
     # network.print_links()
-    network.plot(edge_nodes=node_list, plot_labels=True)
+    network.plot(plot_labels=True)
 
     # network.update_host_location(0, 40.20784298173971, -8.42363234639827)  # CHUC -> DQ
 
