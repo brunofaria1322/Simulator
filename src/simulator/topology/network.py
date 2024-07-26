@@ -6,8 +6,10 @@ import math
 import os
 import json
 import random
+import numpy as np
 import requests
 from geopy.distance import distance
+from sklearn.cluster import DBSCAN
 
 from .link import Link
 from .host import Host
@@ -339,7 +341,7 @@ class Network:
             )
             link.update_distance(euclidian_distance)
 
-    def network_generation(self, n, m, cloud_nodes_percentage=0.01, edge_nodes_percentage=0.25):
+    def network_generation_barabasi(self, n, m, cloud_nodes_percentage=0.01, edge_nodes_percentage=0.30):
         """
         Generates a network topology using the Barabasi-Albert model.
 
@@ -355,23 +357,24 @@ class Network:
                 The percentage of nodes to be designated as edge nodes. Defaults to 0.25.
         """
         self.G = nx.barabasi_albert_graph(n, m)
+        # self.G = nx.connected_watts_strogatz_graph(n, m, 0.1)
 
         # add hosts to the network
         for node in self.G.nodes:
-            # get random values for latitudes and longitudes
-            latitude = 40.20784298173971 + (2 * (0.5 - random.random()))
-            longitude = -8.42363234639827 +  (2 * (0.5 - random.random()))
+            # get random values for latitudes and longitudes for testing
+            latitude = 40.20784298173971 + (30 * (0.5 - random.random())) # values for testing
+            longitude = -8.42363234639827 +  (30 * (0.5 - random.random()))
             # TODO: add resources to the hosts
             self.G.nodes[node]["host"] = Host(id=node, cpu=0, ram=0, disk=0, power=0, latitude=latitude, longitude=longitude)
 
+        edges = [[] for _ in range(n)]
         # add links to the network
-        for edge in self.G.edges:
+        for edge in self.G.edges: 
             host_id1, host_id2 = edge
-            dist = distance(
-                self.get_host(host_id1).get_location(),
-                self.get_host(host_id2).get_location(),
-            ).km
-            self.G.edges[edge]["link"] = Link(distance=dist, bandwidth=0)
+
+            edges[host_id1].append(host_id2)
+            edges[host_id2].append(host_id1)
+
 
         # calculate the centrality for each node
         unordered_centrality_values = nx.betweenness_centrality(self.G)
@@ -380,22 +383,227 @@ class Network:
         )
 
         # update the hosts with the highest centrality as cloud nodes
-        cloud_nodes = max(1, int(n * cloud_nodes_percentage))
+        if not cloud_nodes_percentage:
+            cloud_nodes = 0
+        else:
+            cloud_nodes = max(1, int(n * cloud_nodes_percentage))
+        cloud_node_ids = []
         for i in range(cloud_nodes):
-            latitude = 38.20784298173971 + (2 * (0.5 - random.random()))
-            longitude = -5.42363234639827 +  (2 * (0.5 - random.random()))
+            latitude = 38.20784298173971 + (30 * (0.5 - random.random())) # random values for testing
+            longitude = -5.42363234639827 +  (30 * (0.5 - random.random()))
+
+            cloud_node_ids.append(ordered_centrality_values[i][0])
             self.G.nodes[ordered_centrality_values[i][0]]["host"] = Host(
                 id=ordered_centrality_values[i][0], cpu=0, ram=0, disk=0, power=0, latitude=latitude, longitude=longitude
             )
 
         # update the hosts with the lowest centrality as edge nodes
         edge_nodes = int(n * edge_nodes_percentage)
-        for i in range(cloud_nodes + (n - edge_nodes), n):
-            # TODO: do something with the edge nodes
-            pass
+        edge_node_ids = []
+
+        i = n - 1
+        while len(edge_node_ids) < edge_nodes:
+        # for _ in range(edge_nodes):
+            node_id = ordered_centrality_values[i][0]
+
+            if node_id in cloud_node_ids:
+                break
+            
+            # check if the node has a direct connection to any cloud node
+            has_direct_connection = False
+            for cloud_node_id in cloud_node_ids:
+                if cloud_node_id in edges[node_id]:
+                    has_direct_connection = True
+                    break
+
+            if not has_direct_connection:
+                edge_node_ids.append(node_id)
+            # edge_node_ids.append(node_id)
+            i -= 1
+            
+        print("Number of edge nodes:", len(edge_node_ids))
+        visited = [False] * n
+        stack = []
+        for node_id in edge_node_ids:
+            stack.append(node_id)
+            visited[node_id] = True
+
+            while stack:
+                node = stack.pop()
+                for neighbour in edges[node]:
+                    if not visited[neighbour] and neighbour in edge_node_ids:
+                        visited[neighbour] = True
+
+                        self.G.nodes[neighbour]["host"].update_location(
+                            self.get_host(node).latitude + (0.5 * (0.5 - random.random())),
+                            self.get_host(node).longitude + (0.5 * (0.5 - random.random())),
+                        )
+                        stack.append(neighbour)
+        
+        # update the links
+        for edge in self.G.edges:
+            host_id1, host_id2 = edge
+
+            dist = distance(
+                self.get_host(host_id1).get_location(),
+                self.get_host(host_id2).get_location(),
+            ).km
+            self.G.edges[edge]["link"] = Link(distance=dist, bandwidth=0)
+
+        return edge_node_ids
 
 
-    def plot(self, show_map=False, t=0.0, plot_labels=False):
+    def network_generation_dbscan(self, n, m, cloud_nodes_percentage=0.01, edge_nodes_percentage=0.50):
+        """
+        Generates a network using the DBSCAN algorithm.
+
+        Args:
+            n (int): The number of nodes in the network.
+            m (int): The number of connections to generate for each cluster.
+            cloud_nodes_percentage (float, optional): The percentage of nodes to designate as cloud nodes. Defaults to 0.01.
+            edge_nodes_percentage (float, optional): The percentage of nodes to designate as edge nodes. Defaults to 0.50.
+
+        """
+        l_lb = 6
+        l_ub = 10
+        long_lb = 40
+        long_ub = 50
+
+        latitudes = np.random.uniform(l_lb, l_ub, n)
+        longitudes = np.random.uniform(long_lb, long_ub, n)
+        nodes = np.column_stack((latitudes, longitudes))
+
+        # DBSCAN
+        db = DBSCAN(eps=0.6, min_samples=6).fit(nodes)
+        labels = db.labels_
+
+        # print("Labels:", labels)
+
+        outlier_nodes = []
+
+        clusters = {i: [] for i in range(max(labels) + 1)}
+        for idx, label in enumerate(labels):
+            if label != -1:
+                clusters[label].append(idx)
+            else:
+                outlier_nodes.append(idx)
+
+        # print("Number of clusters:", len(clusters))
+        # print("Clusters:", clusters)
+
+        # add hosts to the network
+        for node in range(n):
+            # TODO: add resources to the hosts
+            self.G.add_node(node, host=Host(id=node, cpu=0, ram=0, disk=0, power=0, latitude=latitudes[node], longitude=longitudes[node]))
+
+        fog_nodes = outlier_nodes
+        # add links to each cluster in the network
+        for cluster in clusters.values():
+            self.generate_connections(cluster, m)
+            self.define_fog_nodes(fog_nodes, cluster, edge_nodes_percentage)
+
+        
+        self.generate_connections(fog_nodes, m, labels)
+        for node in fog_nodes:
+            # TODO: add resources to the hosts
+            self.G.nodes[node]["host"] = Host(
+                id=node, cpu=0, ram=0, disk=0, power=0, latitude=latitudes[node], longitude=longitudes[node]
+            )
+
+        cloud_nodes = self.find_cloud_nodes(fog_nodes, cloud_nodes_percentage)
+        # change the cloud nodes resources
+        for node in cloud_nodes:
+            # TODO: add resources to the hosts
+            self.G.nodes[node]["host"] = Host(
+                id=node, cpu=0, ram=0, disk=0, power=0, latitude=latitudes[node], longitude=longitudes[node]
+            )
+
+
+
+    def generate_connections(self, node_list, m, cluster_mapping=None):
+        """
+        Generates connections between nodes in the network.
+
+        Parameters
+        ----------
+            node_list (list): A list of nodes in the network.
+            m (int): The number of edges to attach from a new node to existing nodes.
+
+        Returns:
+            None
+        """
+        graph = nx.barabasi_albert_graph(len(node_list), min(m, len(node_list) - 1))
+
+        # connect the fog nodes
+        for edge in graph.edges:
+            host_id1, host_id2 = edge
+
+            if cluster_mapping and cluster_mapping[node_list[host_id1]] == cluster_mapping[node_list[host_id2]] and cluster_mapping[node_list[host_id1]] != -1:
+                continue
+
+            dist = distance(
+                self.get_host(node_list[host_id1]).get_location(),
+                self.get_host(node_list[host_id2]).get_location(),
+            ).km
+            self.G.add_edge(node_list[host_id1], node_list[host_id2], link=Link(distance=dist, bandwidth=0))
+
+
+    def define_fog_nodes(self, fog_nodes, cluster, edge_nodes_percentage):
+        """
+        Defines the fog nodes based on the given cluster and edge nodes percentage.
+
+        Parameters
+        ----------
+            fog_nodes (list): The list of fog nodes to be updated.
+            cluster (list): The cluster of nodes to consider.
+            edge_nodes_percentage (int): The percentage of edge nodes in the cluster.
+
+        Returns:
+            None: This method does not return any value. It updates the `fog_nodes` list in-place.
+        """
+
+        if edge_nodes_percentage == 100:
+            return
+        
+        unordered_centrality_values = nx.betweenness_centrality(self.G.subgraph(cluster))
+        ordered_centrality_values = sorted(
+            unordered_centrality_values.items(), key=lambda x: x[1], reverse=True
+        )
+
+        number_of_fog_nodes = max(1, int(len(cluster) * (1 - edge_nodes_percentage)))
+        fog_nodes += [ordered_centrality_values[i][0] for i in range(number_of_fog_nodes)]
+
+
+
+    def find_cloud_nodes(self, fog_nodes, cloud_nodes_percentage=0.01):
+        """
+        Finds the cloud nodes based on the given fog nodes and cloud nodes percentage.
+
+        Parameters
+        ----------
+        - fog_nodes (list): A list of fog nodes.
+        - cloud_nodes_percentage (float): The percentage of cloud nodes to be selected from the fog nodes. Default is 0.01.
+
+        Returns:
+        - list: A list of cloud nodes selected based on the given percentage.
+
+        """
+        if cloud_nodes_percentage == 0:
+            return []
+        
+        number_of_cloud_nodes = max(1, int(len(fog_nodes) * cloud_nodes_percentage))
+
+        unordered_centrality_values = nx.betweenness_centrality(self.G.subgraph(fog_nodes))
+        ordered_centrality_values = sorted(
+            unordered_centrality_values.items(), key=lambda x: x[1], reverse=True
+        )
+
+        return [ordered_centrality_values[i][0] for i in range(number_of_cloud_nodes)]
+
+
+
+
+    def plot(self, show_map=False, t=0.0, plot_labels=False, edge_nodes=None):
         """Plot the network
 
         Parameters
@@ -442,8 +650,21 @@ class Network:
             # Add basemap
             add_basemap(ax, crs="EPSG:4326", attribution_size=5)
 
-        nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
+        if edge_nodes is None:
+            nx.draw_networkx_nodes(g, pos=pos, node_size=10, node_color="red", alpha=0.5)
+        else:
+            nx.draw_networkx_nodes(
+                g,
+                pos=pos,
+                nodelist=edge_nodes,
+                node_size=10,
+                node_color="red",
+                alpha=0.5,
+            )
         nx.draw_networkx_edges(g, pos=pos, edge_color="gray", alpha=0.1)
+
+        if plot_labels:
+            nx.draw_networkx_labels(g, pos=pos, font_size=8, font_color="black")
 
         plt.tight_layout()
 
