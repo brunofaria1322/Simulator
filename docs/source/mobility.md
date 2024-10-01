@@ -11,7 +11,19 @@ Let’s drive into the details! 🚗🌐📡
 Once you’ve completed your SUMO simulation, it’s time to integrate the mobility data into your project. Ensure that the data is exported in XML format, with geolocational coordinates included. Execute the command below to generate the `fcd-output-file.xml` containing your mobility data:
 
 ```bash
-sumo -c ./path_to_sumo_simulation.sumocfg --fcd-output.geo 1 --fcd-output fcd-output-file.xml
+sumo -c path_to_sumo_simulation.sumocfg --fcd-output.geo 1 --fcd-output fcd-output-file.xml
+```
+
+
+If your SUMO simulation covers a large period, the exportation and importation of the data will take a considerable amount of time. To expedite the process, modify the `.sumocfg` file by adding or editing the following lines:
+
+```xml
+<configuration ...>
+    <time>
+        <begin value="0"/>    <!-- Adjust the begin value to your desired time -->
+        <end value="1000.0"/>   <!-- Adjust the end value to your desired time -->
+    </time>
+    ...
 ```
 
 ### Importing the Mobility Data into Your Network

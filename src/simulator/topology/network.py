@@ -57,14 +57,14 @@ class Network:
         self.minlon = 180
         self.maxlon = -180
 
-    def load_sumo_data(self, file_path: str, force_read_xml=False):
+    def load_sumo_data(self, file_path: str = "", force_read_xml: bool = False):
         """Initialise network from SUMO output file
 
         If the sumo_data.json file exists, it will load the data from it instead of the XML file, for faster access.
 
         Parameters
         ----------
-        file_path : str
+        file_path : str, optional
             File path to SUMO output file. Must be XML!
         force_read_xml : bool, optional
             Force reading the XML file, by default False
@@ -103,11 +103,13 @@ class Network:
                         self.maxlat = vehicle_y
             return
 
-        
+        if file_path == "":
+            raise FileNotFoundError("No JSON file found and no XML file provided")
+
         # Verify if file is XML
         if not file_path.endswith(".xml"):
             raise TypeError("File must be XML")
-        
+
         # Verify if file exists
         if not os.path.isfile(file_path):
             raise FileNotFoundError("File not found")

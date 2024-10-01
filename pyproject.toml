@@ -70,7 +70,7 @@ dependencies = [
 
 [project.optional-dependencies]
 doc = ["sphinx", "myst-parser", "furo", "nbsphinx"]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "flake8", "black", "tox"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "README.md"]
